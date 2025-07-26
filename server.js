@@ -1,4 +1,4 @@
-// server.js - FINAL SIMPLIFIED VERSION
+// server.js - FINAL STABLE VERSION
 
 const express = require('express');
 const http = require('http');
@@ -11,7 +11,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://wt-cakewala.netlify.app", // This is correct
+    origin: "https://wt-cakewala.netlify.app", // Correct
     methods: ["GET", "POST"]
   }
 });
@@ -37,10 +37,13 @@ io.on('connection', (socket) => {
     if (data && data.channel && data.audioChunk) {
       console.log(`Received audio from ${socket.id} for channel ${data.channel}. Broadcasting...`);
       
-      // *** THE FINAL, CORRECT LOGIC IS HERE ***
-      // This sends the message to everyone in the room EXCEPT for the socket that sent it.
-      // This is the built-in way to prevent echo.
-      socket.broadcast.to(data.channel).emit('audio-message-from-server', data);
+      // Send to EVERYONE in the room (including the sender)
+      // but add the sender's ID to the message payload.
+      io.to(data.channel).emit('audio-message-from-server', {
+        channel: data.channel,
+        audioChunk: data.audioChunk,
+        senderId: socket.id 
+      });
     }
   });
 
