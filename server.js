@@ -1,4 +1,4 @@
-// server.js - FINAL CORRECTED VERSION
+// server.js - FINAL SIMPLIFIED VERSION
 
 const express = require('express');
 const http = require('http');
@@ -37,14 +37,10 @@ io.on('connection', (socket) => {
     if (data && data.channel && data.audioChunk) {
       console.log(`Received audio from ${socket.id} for channel ${data.channel}. Broadcasting...`);
       
-      // *** THE FIX IS HERE ***
-      // Instead of socket.to().broadcast.emit(), we use io.to().emit()
-      // We also add the sender's ID to the payload so the client can ignore it.
-      io.to(data.channel).emit('audio-message-from-server', {
-        channel: data.channel,
-        audioChunk: data.audioChunk,
-        senderId: socket.id // Add the sender's unique ID
-      });
+      // *** THE FINAL, CORRECT LOGIC IS HERE ***
+      // This sends the message to everyone in the room EXCEPT for the socket that sent it.
+      // This is the built-in way to prevent echo.
+      socket.broadcast.to(data.channel).emit('audio-message-from-server', data);
     }
   });
 
