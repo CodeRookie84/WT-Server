@@ -1,4 +1,4 @@
-// server.js
+// server.js - FINAL CORRECTED VERSION
 
 const express = require('express');
 const http = require('http');
@@ -18,31 +18,33 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3001;
 
-app.get('/', (req, res) => res.send('Walkie-talkie server is running and ready for CHANNELS!'));
+app.get('/', (req, res) => res.send('Walkie-talkie server is running!'));
 
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  // STEP 2.1: Listen for a client wanting to join a room
   socket.on('join-channel', (channelId) => {
-    socket.join(channelId); // This is the magic command to join a room
+    socket.join(channelId);
     console.log(`User ${socket.id} JOINED channel: ${channelId}`);
   });
   
-  // STEP 2.2: Listen for a client wanting to leave a room
   socket.on('leave-channel', (channelId) => {
-    socket.leave(channelId); // This command leaves the room
+    socket.leave(channelId);
     console.log(`User ${socket.id} LEFT channel: ${channelId}`);
   });
 
-  // STEP 2.3: Modify the audio handler
-  // Instead of 'audio-message', it now expects an object with channel info
   socket.on('audio-message', (data) => {
-    // We expect 'data' to be an object like: { channel: 'General', audioChunk: <...> }
     if (data && data.channel && data.audioChunk) {
-      console.log(`Received audio for channel ${data.channel}. Broadcasting to room...`);
-      // Broadcast the audio ONLY to clients in that specific room, except the sender
-      socket.to(data.channel).broadcast.emit('audio-message-from-server', data);
+      console.log(`Received audio from ${socket.id} for channel ${data.channel}. Broadcasting...`);
+      
+      // *** THE FIX IS HERE ***
+      // Instead of socket.to().broadcast.emit(), we use io.to().emit()
+      // We also add the sender's ID to the payload so the client can ignore it.
+      io.to(data.channel).emit('audio-message-from-server', {
+        channel: data.channel,
+        audioChunk: data.audioChunk,
+        senderId: socket.id // Add the sender's unique ID
+      });
     }
   });
 
