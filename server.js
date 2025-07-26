@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://wt-cakewala.netlify.app/", // Your Netlify frontend URL
+    origin: "https://wt-cakewala.netlify.app", // Your Netlify frontend URL
     methods: ["GET", "POST"]
   }
 });
